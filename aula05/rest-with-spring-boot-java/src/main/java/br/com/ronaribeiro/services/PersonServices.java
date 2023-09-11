@@ -6,7 +6,9 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.com.ronaribeiro.data.vo.v1.PersonVO;
 import br.com.ronaribeiro.exceptions.ResourceNotFoundException;
+import br.com.ronaribeiro.mapper.LocalModelMapper;
 import br.com.ronaribeiro.model.Person;
 import br.com.ronaribeiro.repositories.PersonRepository;
 
@@ -19,30 +21,35 @@ public class PersonServices {
 	PersonRepository repository;
 	
 	
-	public List<Person> findAll() {
+	public List<PersonVO> findAll() {
 		
 		logger.info("buscando todas as pessoas!");
 		
-		return repository.findAll();
+		return LocalModelMapper.parseListObjects(repository.findAll(), PersonVO.class) ;
 		
 	}
 	
 	
-	public Person findById(Long id) {
+	public PersonVO findById(Long id) {
 		
 		logger.info("buscando uma pessoa!");
 		
-		return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("no data found"));
+		return LocalModelMapper.parseObject(repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("no data found")),PersonVO.class);
 		
 	}
 	
-	public Person create(Person person) {
+	public PersonVO create(PersonVO person) {
 		logger.info("Criando uma pessoa");
-		return repository.save(person);
+		
+		var entity = LocalModelMapper.parseObject(person, Person.class);
+		
+		var vo = LocalModelMapper.parseObject(repository.save(entity), PersonVO.class);
+		
+		return vo;
 	}
 
 
-	public Person update(Person person) {
+	public PersonVO update(PersonVO person) {
 		logger.info("Alterando uma pessoa");
 		
 		var entity = repository.findById(person.getId()).orElseThrow(() -> new ResourceNotFoundException("no data found"));
@@ -52,7 +59,9 @@ public class PersonServices {
 		entity.setAddress(person.getAddress());
 		entity.setGender(person.getGender());
 		
-		return repository.save(person);
+		var vo = LocalModelMapper.parseObject(repository.save(entity), PersonVO.class);
+		
+		return vo;
 	}
 	
 	public void delete(Long id) {
